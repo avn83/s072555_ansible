@@ -1,0 +1,15 @@
+---
+- name: Remove firewall
+  ansible.builtin.apt:
+    name: ufw
+    state: absent
+  when:
+    - common_remove_firewall
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages_apt }}"
+    state: present
+    update_cache: true
+
+# ulimit ???

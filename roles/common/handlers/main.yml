@@ -1,0 +1,10 @@
+---
+# handlers file for common
+- name: Reboot OS
+  ansible.builtin.reboot:
+    msg: "Rebooting machine in 5 seconds"
+
+- name: Restart Docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted

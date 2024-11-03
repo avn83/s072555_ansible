@@ -1,0 +1,13 @@
+---
+# tasks file for semaphore
+- name: Install ansible-semaphore
+  ansible.builtin.apt:
+    deb: "https://github.com/ansible-semaphore/semaphore/releases/download/v{{ semaphore_version }}/semaphore_{{ semaphore_version }}_linux_{{ [ansible_architecture] | map('extract', semaphore_deb_architecture) | first }}.deb" # noqa: yaml[line-length]
+    state: present
+    update_cache: true
+
+- name: Configure
+  ansible.builtin.include_tasks: configure.yml
+
+- name: Service
+  ansible.builtin.include_tasks: package_service.yml

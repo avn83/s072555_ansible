@@ -1,0 +1,30 @@
+---
+- name: Set fact semaphore_postgres_host if localhost
+  ansible.builtin.set_fact:
+    semaphore_postgres_host: "{{ semaphore_postgres_host | replace('127.0.0.1', 'host.docker.internal') | replace('localhost', 'host.docker.internal') }}"
+  when:
+    - "'127.0.0.1' in semaphore_postgres_host"
+    - "'localhost' in semaphore_postgres_host"
+
+- name: Configure
+  ansible.builtin.include_tasks: configure.yml
+
+- name: Create docker semaphore_server
+  community.docker.docker_container:
+    name: "{{ item.svc }}"
+    image: "semaphoreui/semaphore:v{{ semaphore_version }}"
+    restart_policy: always
+    state: started
+    env_file: /etc/semaphore/env
+    network_mode: host
+    env:
+      SEMAPHORE_PORT: "{{ item.port }}"
+    volumes:
+      - /etc/semaphore/config.json:/etc/semaphore/config.json
+      - /var/lib/semaphore:/var/lib/semaphore
+      - /tmp/semaphore:/tmp/semaphore
+    etc_hosts: >
+      {
+      "host.docker.internal": "host-gateway"
+      }
+  with_items: "{{ semaphore_list }}"

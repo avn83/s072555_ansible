@@ -1,0 +1,38 @@
+---
+# defaults file for common
+common_remove_firewall: true
+common_disable_selinux: true
+common_packages_yum:
+  - yum-utils
+  - htop
+  - vim
+  - nano
+  - sysstat
+  - lsof
+  - iotop
+  - python3-pip
+  - ca-certificates
+  - curl
+common_packages_apt:
+  - htop
+  - vim
+  - nano
+  - sysstat
+  - lsof
+  - iotop
+  - python3-pip
+  - ca-certificates
+  - curl
+  - acl # for new version ansible
+common_docker_install: false
+common_docker_remove_old_version: false
+common_deb_architecture: {
+  "aarch64": "arm64",
+  "x86_64": "amd64"
+}
+common_docker_daemon_settings: {
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "3" }
+}

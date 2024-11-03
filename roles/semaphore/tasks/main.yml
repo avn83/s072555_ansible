@@ -1,0 +1,38 @@
+---
+# tasks file for semaphore
+- name: Extra variables
+  ansible.builtin.include_tasks: "variables.yml"
+
+- name: Install docker
+  ansible.builtin.include_role:
+    name: common
+    allow_duplicates: false
+  vars:
+    common_docker_install: true
+  when: semaphore_is_docker
+
+- name: Install conteiner on Ubuntu
+  ansible.builtin.include_tasks: "docker.yml"
+  when: semaphore_is_docker
+
+- name: Install package on Ubuntu
+  ansible.builtin.include_tasks: "package_ubuntu.yml"
+  when: ansible_os_family == "Debian" and not semaphore_is_docker
+
+- name: Install package on CentOS
+  ansible.builtin.include_tasks: "package_centos.yml"
+  when: ansible_os_family == "RedHat" and not semaphore_is_docker
+
+- name: User admin
+  ansible.builtin.include_tasks: "user_admin.yml"
+
+- name: NGINX
+  ansible.builtin.include_tasks: "nginx.yml"
+  when: semaphore_proxy_is_nginx_or_not_is_haproxy
+
+- name: HAPROXY
+  ansible.builtin.include_tasks: "haproxy.yml"
+  when: not semaphore_proxy_is_nginx_or_not_is_haproxy
+
+- name: Remove
+  ansible.builtin.include_tasks: "remove.yml"

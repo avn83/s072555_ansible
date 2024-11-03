@@ -1,0 +1,11 @@
+---
+# tasks file for semaphore
+- name: Create service semaphore
+  ansible.builtin.template:
+    src: semaphore.service.j2
+    dest: "/lib/systemd/system/{{ item.svc }}.service"
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart service
+  with_items: "{{ semaphore_list }}"

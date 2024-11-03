@@ -1,0 +1,40 @@
+---
+# tasks file for pgsql
+- name: PostgreSQL install repo
+  ansible.builtin.dnf:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_version }}-{{ ansible_architecture }}/pgdg-redhat-repo-latest.noarch.rpm" # noqa: yaml[line-length]
+    state: present
+    update_cache: true
+    disable_gpg_check: true
+
+- name: Disabled the built-in PostgreSQL module
+  ansible.builtin.dnf:
+    name: postgresql
+    state: absent
+    autoremove: false
+
+- name: "Install PostgreSQL {{ pgsql_version }}"
+  ansible.builtin.yum:
+    name:
+      - "postgresql{{ pgsql_version }}"
+      - "postgresql{{ pgsql_version }}-server"
+      - "postgresql{{ pgsql_version }}-contrib"
+      - python3-psycopg2
+    state: present
+
+- name: "Check exist dir {{ pgsql_data_path }}"
+  ansible.builtin.stat:
+    path: "{{ pgsql_data_path }}/PG_VERSION"
+  register: __db_dir
+
+- name: Postgresql init db
+  ansible.builtin.command: "postgresql-{{ pgsql_version }}-setup initdb"
+  register: __init_db
+  changed_when: "'Initializing database ... OK' in __init_db.stdout"
+  when: not __db_dir.stat.exists
+
+- name: Postgresql is started and enabled at boot
+  ansible.builtin.service:
+    name: "postgresql-{{pgsql_version }}"
+    state: started
+    enabled: true

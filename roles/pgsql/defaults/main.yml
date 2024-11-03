@@ -1,0 +1,40 @@
+---
+# defaults file for pgsql
+pgsql_geerlingguy: true
+pgsql_version: "16"
+
+# default: один экземпляр - одна БД.
+# Но можно переопределить как ниже _default так и без _default
+pgsql_postgres_pass: pa$$w0rd
+pgsql_database_user: simple
+pgsql_database_pass: simple
+pgsql_database_name: "{{ pgsql_database_user }}"
+
+# Default for role geerlingguy - add prefix pgsql_ over postgresql_ and declare in variables
+pgsql_python_library: python3-psycopg2
+pgsql_global_config_options:
+  - option: listen_addresses
+    value: "*"
+  - option: log_directory
+    value: 'log'
+
+pgsql_hba_entries:
+  - { type: local, database: all, user: postgres, auth_method: peer }
+  - { type: local, database: all, user: all, auth_method: md5 }
+  - { type: host, database: "{{ pgsql_database_name }}", user: "{{ pgsql_database_user }}", address: '0.0.0.0/0', auth_method: md5 }
+  - { type: host, database: "{{ pgsql_database_name }}", user: "{{ pgsql_database_user }}", address: '::0/0', auth_method: md5 }
+  # - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+  # - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+  # - { type: host, database: all, user: all, address: '0.0.0.0/0', auth_method: md5 }
+  # - { type: host, database: all, user: all, address: '::0/0', auth_method: md5 }
+pgsql_databases:
+  - name: "{{ pgsql_database_name }}"
+    owner: "{{ pgsql_database_user }}"
+
+pgsql_users:
+  - name: postgres
+    password: "{{ pgsql_postgres_pass }}"
+  - name: "{{ pgsql_database_user }}"
+    password: "{{ pgsql_database_pass }}"
+
+postgres_users_no_log: false # noqa: yaml[trailing-spaces]

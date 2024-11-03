@@ -1,0 +1,11 @@
+---
+# tasks file for semaphore
+- name: Configure HAPROXY
+  ansible.builtin.include_role:
+    name: geerlingguy.haproxy
+  vars:
+    haproxy_backend_servers: "{{ semaphore_upstreams_haproxy }}"
+    haproxy_frontend_name: "semaphore"
+    haproxy_frontend_bind_address: "{{ '*' if semaphore_server_name == '_' else ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}"
+    haproxy_frontend_port: 80
+    haproxy_frontend_mode: "http"

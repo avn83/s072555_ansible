@@ -1,0 +1,8 @@
+roles:
+  - src: geerlingguy.postgresql
+  - src: geerlingguy.nginx
+  - src: geerlingguy.haproxy
+
+collections:
+  - name: community.postgresql
+  - name: community.docker

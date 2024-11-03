@@ -1,0 +1,26 @@
+---
+- name: Remove firewall
+  ansible.builtin.yum:
+    name: firewalld
+    state: absent
+  when:
+    - common_remove_firewall
+
+- name: Disable selinux
+  ansible.posix.selinux:
+    state: disabled
+  notify: Reboot OS
+  when:
+    - common_disable_selinux
+
+- name: Install epel repo
+  ansible.builtin.yum:
+    name: epel-release
+    state: present
+    update_cache: true
+
+- name: Install common packages
+  ansible.builtin.yum:
+    name: "{{ common_packages_yum }}"
+    state: present
+    update_cache: true

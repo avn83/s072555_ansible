@@ -1,0 +1,17 @@
+---
+# tasks file for semaphore
+- name: Configure NGINX
+  ansible.builtin.include_role:
+    name: geerlingguy.nginx
+  vars:
+    nginx_remove_default_vhost: true
+    nginx_listen_ipv6: false
+    nginx_upstreams:
+      - name: semaphore
+        strategy: "ip_hash" # "least_conn", etc.
+        servers: "{{ semaphore_upstreams_nginx }}"
+        # keepalive: 16 # optional
+    nginx_vhosts:
+      - filename: semaphore.conf
+        server_name: _
+    nginx_vhost_template: "{{ playbook_dir }}/roles/semaphore/templates/nginx_semaphore.j2"

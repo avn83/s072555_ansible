@@ -1,0 +1,42 @@
+---
+# tasks file for pgsql
+- name: Install PG used geerlingguy.postgresql
+  ansible.builtin.include_role:
+    name: geerlingguy.postgresql
+    allow_duplicates: false
+    apply:
+      become: true
+  when: pgsql_geerlingguy
+
+- name: PG data path
+  ansible.builtin.set_fact:
+    pgsql_data_path: "{{ '/etc/postgresql/' ~ pgsql_version ~ '/main' if ansible_os_family == 'Debian'
+      else '/var/lib/pgsql/' ~ pgsql_version ~ '/data' }}"
+  when: not pgsql_geerlingguy
+
+- name: Install PG used local tasks Ubuntu
+  ansible.builtin.include_tasks: "pg_ubuntu.yml"
+  when: ansible_os_family == "Debian" and not pgsql_geerlingguy
+
+- name: Install PG used local tasks CentOS
+  ansible.builtin.include_tasks: "pg_centos.yml"
+  when: ansible_os_family == "RedHat" and not pgsql_geerlingguy
+
+- name: PG configured
+  ansible.builtin.include_tasks: "pg_config.yml"
+  when: not pgsql_geerlingguy
+
+- name: Test connect
+  community.postgresql.postgresql_query:
+    db: "{{ pgsql_database_name }}"
+    login_user: "{{ pgsql_database_user }}"
+    login_password: "{{ pgsql_database_pass }}"
+    login_host: localhost
+    query: SELECT version()
+  register: pgsql_test
+  when: pgsql_database_user|length>1 and pgsql_database_pass|length>1 and pgsql_database_name|length>1
+
+- name: Print test connect
+  ansible.builtin.debug:
+    var: pgsql_test.query_result
+  when: pgsql_database_user|length>1 and pgsql_database_pass|length>1 and pgsql_database_name|length>1

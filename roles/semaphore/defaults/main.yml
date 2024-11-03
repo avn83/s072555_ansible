@@ -1,0 +1,33 @@
+---
+# defaults file for semaphore
+# version semaphore
+semaphore_version: 2.10.35
+# default home user semaphore where save configs
+semaphore_conf_home: '/home/semaphore'
+# Count process in one host. !!! Запустить приложение в несколько процессов(2 и больше).
+semaphore_process_count: 1
+# Default parameters
+semaphore_cookie_hash: "ssiQ7ODyW9Tkvhl+mj7YGImR05HZA2N7NIkNAQ/QkZc="
+semaphore_cookie_encryption: "2m5xQVgAAymcCGZe4OqMsNJAS+rDLUOUuDMiRSAjLGg="
+semaphore_access_key_encryption: "Vbvpd/eOU2//Z1KasmbpSPjC3/dec5uiHuDphQkS1OU="
+# Default Name admin and pass
+semaphore_admin_pass: admin
+semaphore_admin_name: Administrator
+semaphore_admin_email: "admin@localhost"
+semaphore_admin_user: admin
+# Default postgres host.
+# !!! По правилам, необходимо вычислить ip, например взять его из инвентари, или доп конфигураций...
+semaphore_postgres_host: "127.0.0.1"
+semaphore_postgres_port: "5432"
+# Proxy used nginx or haproxy. !!! Установить балансировщик NGINX или Haproxy.
+semaphore_proxy_is_nginx_or_not_is_haproxy: true
+# Use docker or package install. !!! Реализовать запуск приложения именно через systemd.service
+semaphore_is_docker: false
+# Имя хоста. Влияет на nginx, haproxy И корректировку SEMAPHORE_WEB_ROOT. По хорошему требуются доп проверки для проверок
+semaphore_server_name: '_'
+
+# мапинг os architecture
+semaphore_deb_architecture: {
+  "aarch64": "arm64",
+  "x86_64": "amd64"
+}

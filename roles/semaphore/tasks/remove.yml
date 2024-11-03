@@ -1,0 +1,30 @@
+---
+# tasks file for semaphore
+- name: Stop service before remove
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  with_items: "{{ semaphore_svc_remove }}"
+
+- name: Remove service in /etc/systemd/system/
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item }}.service"
+    state: absent
+  with_items: "{{ semaphore_svc_remove }}"
+  notify:
+    - Reload systemd
+
+- name: Remove service in /usr/lib/systemd/system
+  ansible.builtin.file:
+    path: "/usr/lib/systemd/system/{{ item }}.service"
+    state: absent
+  with_items: "{{ semaphore_svc_remove }}"
+  notify:
+    - Reload systemd
+
+- name: Remove container semaphore_server
+  community.docker.docker_container:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ semaphore_docker_remove }}"

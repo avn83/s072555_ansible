@@ -1,0 +1,7 @@
+---
+# handlers file for pgsql
+- name: Restart PG
+  ansible.builtin.service:
+    name: "{{ 'postgresql' if ansible_os_family == 'Debian' else 'postgresql-' ~ pgsql_version }}"
+    state: restarted
+    enabled: true

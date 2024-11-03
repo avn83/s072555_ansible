@@ -1,0 +1,23 @@
+#################
+#  semaphore    #
+#################
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/semaphore.yml
+  roles:
+    - common
+    - pgsql
+    - semaphore
+
+  post_tasks:
+    - name: "Healthcheck Semaphore"
+      delegate_to: 127.0.0.1
+      ansible.builtin.uri:
+        url: "http://{{ansible_host}}/auth/login"
+        method: GET
+        return_content: yes
+        status_code: 200
+      register: result
+      until: "'<title>Dashboard - Semaphore UI</title>' in result.content"

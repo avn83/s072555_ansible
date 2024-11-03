@@ -1,0 +1,25 @@
+---
+# Установка PostgreSQL ролью geerlingguy.postgresql или же отдельными тасками через пакеты
+pgsql_geerlingguy: false
+
+####################################################
+pgsql_postgres_pass: pa$$w0rd232 # Пароль от postgres пользователя
+pgsql_database_user: semaphore # Default: DB=username
+pgsql_database_pass: semaphore # Шифруем с помощью vault
+####################################################
+
+####################################################
+# Параметры которые можно менять без перезаливки VM или ручных удалений
+#  реализовано удаление служб, если выбраны другие те или ные аргументы
+####################################################
+# Count process in one host. !!! Запустить приложение в несколько процессов(2 и больше).
+semaphore_process_count: 1
+# Proxy used nginx or haproxy. !!! Установить балансировщик NGINX или Haproxy.
+semaphore_proxy_is_nginx_or_not_is_haproxy: false
+# Use docker or package install. !!! Реализовать запуск приложения именно через systemd.service
+semaphore_is_docker: false
+####################################################
+# Зависимые параметры
+semaphore_postgres_user: '{{ pgsql_database_user }}'
+semaphore_postgres_pass: '{{ pgsql_database_pass }}'
+semaphore_postgres_name: '{{ pgsql_database_user }}'

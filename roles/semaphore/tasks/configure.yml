@@ -1,0 +1,53 @@
+---
+# tasks file for semaphore
+- name: Add linux user semaphore
+  ansible.builtin.user:
+    name: semaphore
+    create_home: true
+    home: "{{ semaphore_conf_home }}"
+    shell: /usr/sbin/nologin
+
+- name: Configure config.json and env
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ semaphore_conf_home }}/{{ item }}"
+    owner: semaphore
+    group: semaphore
+    mode: "0644"
+  notify:
+    - Restart service
+    - Restart docker
+  with_items:
+    - "config.json"
+    - "env"
+
+- name: Create a directory /tmp/semaphore and /var/lib/semaphore
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: semaphore
+    group: semaphore
+    mode: "0755"
+  with_items:
+    - /tmp/semaphore
+    - /var/lib/semaphore
+
+- name: Create a directory /etc/semaphore
+  ansible.builtin.file:
+    path: /etc/semaphore
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create a symbolic link /etc/semaphore/ config.json and env
+  ansible.builtin.file:
+    src: "{{ semaphore_conf_home }}/{{ item }}"
+    dest: "/etc/semaphore/{{ item }}"
+    owner: semaphore
+    group: semaphore
+    state: link
+    follow: false
+  with_items:
+    - "config.json"
+    - "env"

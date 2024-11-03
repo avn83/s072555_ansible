@@ -1,0 +1,16 @@
+{
+        "postgres": {
+                "host": "{{ semaphore_postgres_host }}:{{ semaphore_postgres_port }}",
+                "user": "{{ semaphore_postgres_user }}",
+                "pass": "{{ semaphore_postgres_pass }}",
+                "name": "{{ semaphore_postgres_name }}",
+                "options": {
+                        "sslmode": "disable"
+                }
+        },
+        "dialect": "postgres",
+        "tmp_path": "/tmp/semaphore",
+        "cookie_hash": "{{ semaphore_cookie_hash }}",
+        "cookie_encryption": "{{ semaphore_cookie_encryption }}",
+        "access_key_encryption": "{{ semaphore_access_key_encryption }}"
+ }

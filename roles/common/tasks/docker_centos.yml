@@ -1,0 +1,44 @@
+---
+- name: Uninstall old packages docker-*
+  ansible.builtin.yum:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+    state: absent
+  when:
+    common_docker_remove_old_version
+
+#- name: Enable centos-extras for CentOS 9 (stream)
+#  ansible.builtin.yum_repository:
+#    name: centos-extras
+#    state: present
+#    enabled: true
+#  when: ansible_distribution == "CentOS" and  ansible_distribution_release == "Stream" and ansible_distribution_version == "9"
+
+
+- name: Docker repo | add source
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: "0644"
+
+- name: Install packages docker-*
+  ansible.builtin.yum:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - python3-docker
+    state: present
+    update_cache: true
+
+- name: Configure docker
+  ansible.builtin.include_tasks: "docker_config.yml"

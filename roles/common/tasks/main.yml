@@ -1,0 +1,25 @@
+---
+# tasks file for common
+- name: Ubuntu tasks
+  ansible.builtin.include_tasks: "common_ubuntu.yml"
+  when: ansible_os_family == "Debian"
+  tags:
+    - common
+
+- name: Centos tasks
+  ansible.builtin.include_tasks: "common_centos.yml"
+  when: ansible_os_family == "RedHat"
+  tags:
+    - common
+
+- name: Install Docker Engine on Ubuntu
+  ansible.builtin.include_tasks: "docker_ubuntu.yml"
+  when: ansible_os_family == "Debian" and common_docker_install
+  tags:
+    - docker
+
+- name: Install Docker Engine on CentOS
+  ansible.builtin.include_tasks: "docker_centos.yml"
+  when: ansible_os_family == "RedHat" and common_docker_install
+  tags:
+    - docker

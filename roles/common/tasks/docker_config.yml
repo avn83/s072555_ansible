@@ -1,0 +1,14 @@
+---
+- name: Configure /etc/docker/daemon.json
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: "0640"
+  notify: Restart Docker
+  when: common_docker_daemon_settings !=""
+
+- name: Docker is started and enabled at boot
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true

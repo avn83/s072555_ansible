@@ -1,0 +1,31 @@
+---
+# tasks file for semaphore
+- name: "Check exist user {{ semaphore_admin_user }}"
+  community.postgresql.postgresql_query:
+    db: "{{ semaphore_postgres_name }}"
+    login_user: "{{ semaphore_postgres_user }}"
+    login_password: "{{ semaphore_postgres_pass }}"
+    login_host: "{{ semaphore_postgres_host }}"
+    port: "{{ semaphore_postgres_port }}"
+    query: SELECT * FROM public.user WHERE username = %s
+    positional_args:
+      - '{{ semaphore_admin_user }}'
+  register: _user_exist
+
+- name: Print user
+  debug:
+    var: _user_exist
+
+- name: Add login admin from package
+  ansible.builtin.command: "semaphore user add --admin --login admin --name Administartor --email admin@localhost.local --password {{ semaphore_admin_pass }} --config /etc/semaphore/config.json" # noqa: yaml[line-length]
+  register: __login_admin
+  failed_when: __login_admin.rc != 0
+  changed_when: "'> added!' in __login_admin.stdout"
+  when: _user_exist.rowcount == 0 and not semaphore_is_docker
+
+- name: Add login admin from docker
+  ansible.builtin.command: "docker exec -i {{ semaphore_list[0].svc }} semaphore user add --admin --login admin --name Administartor --email admin@localhost.local --password {{ semaphore_admin_pass }} --config /etc/semaphore/config.json" # noqa: yaml[line-length]
+  register: __login_admin
+  failed_when: __login_admin.rc != 0
+  changed_when: "'> added!' in __login_admin.stdout"
+  when: _user_exist.rowcount == 0 and semaphore_is_docker

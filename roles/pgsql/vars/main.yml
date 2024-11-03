@@ -1,0 +1,8 @@
+---
+# vars file for pgsql
+# var for pgsql_ geerlingguy.postgresql!!@
+postgresql_python_library: '{{ pgsql_python_library }}' # noqa: var-naming[no-role-prefix]
+postgresql_global_config_options: '{{ pgsql_global_config_options }}' # noqa: var-naming[no-role-prefix]
+postgresql_hba_entries: '{{ pgsql_hba_entries }}' # noqa: var-naming[no-role-prefix]
+postgresql_databases: '{{ pgsql_databases }}' # noqa: var-naming[no-role-prefix]
+postgresql_users: '{{ pgsql_users }}' # noqa: var-naming[no-role-prefix]

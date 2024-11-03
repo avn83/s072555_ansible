@@ -1,0 +1,39 @@
+---
+# handlers file for semaphore
+# acl - for new version ansible
+# if not changed: bug https://github.com/ansible/ansible/issues/77606
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: not semaphore_is_docker
+
+- name: Restart service
+  ansible.builtin.service:
+    name: "{{ item.svc }}"
+    state: restarted
+    enabled: true
+  with_items: "{{ semaphore_list }}"
+  when: not semaphore_is_docker
+
+# Пересоздаем, иначе переменные не подтянутся
+- name: Restart docker
+  community.docker.docker_container:
+    name: "{{ item.svc }}"
+    image: "semaphoreui/semaphore:v{{ semaphore_version }}"
+    restart_policy: always
+    state: started
+    recreate: true
+    env_file: /etc/semaphore/env
+    network_mode: host
+    env:
+      SEMAPHORE_PORT: "{{ item.port }}"
+    volumes:
+      - /etc/semaphore/config.json:/etc/semaphore/config.json
+      - /var/lib/semaphore:/var/lib/semaphore
+      - /tmp/semaphore:/tmp/semaphore
+    etc_hosts: >
+      {
+      "host.docker.internal": "host-gateway"
+      }
+  with_items: "{{ semaphore_list }}"
+  when: semaphore_is_docker

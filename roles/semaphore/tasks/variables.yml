@@ -1,0 +1,102 @@
+---
+# tasks file for semaphore
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Set empty extra values
+  ansible.builtin.set_fact:
+    docker_facts: ""
+    semaphore_list: []
+    semaphore_svc_host: []
+    semaphore_docker_host: []
+    semaphore_svc_remove: []
+    semaphore_upstreams_nginx: []
+    semaphore_upstreams_haproxy: []
+    semaphore_docker_remove: []
+    semaphore_suffix: "{{ 'semaphore_server_' if (semaphore_is_docker) is defined else 'semaphore-' }}"
+
+- name: Set default extra values, so semaphore_process_count < 2
+  ansible.builtin.set_fact:
+    semaphore_list:
+      - svc: "semaphore"
+        port: 3000
+    semaphore_upstreams_nginx:
+      - "127.0.0.1:3000"
+    semaphore_upstreams_haproxy:
+      - name: "semaphore"
+        address: "127.0.0.1:3000"
+  when: semaphore_process_count < 2
+
+- name: Set list extra values, so semaphore_process_count > 1
+  ansible.builtin.set_fact:
+    semaphore_list: "{{ semaphore_list +[{'svc': semaphore_suffix ~ item, 'port': (item|int + 3000) }] }}"
+    semaphore_upstreams_nginx: "{{ semaphore_upstreams_nginx + ['127.0.0.1:' ~ (item|int + 3000)] }}"
+    semaphore_upstreams_haproxy: "{{ semaphore_upstreams_haproxy +[{'name': semaphore_suffix ~ item, 'address': '127.0.0.1:' ~ (item|int + 3000) }] }}"
+  with_sequence: "1-{{ semaphore_process_count }}"
+  when: semaphore_process_count > 1
+
+- name: Set list current semaphore services
+  ansible.builtin.set_fact:
+    semaphore_svc_host: >- # noqa: jinja[spacing] jinja[spacing]
+      {%- for i in ansible_facts.services -%}
+      {%-   if (i | regex_search('^(nginx|semaphore|semaphore-[0-9]+).service$') is not none) -%}
+      {%-     set _ = semaphore_svc_host.append( i|replace('.service', '')) -%}
+      {%-   endif -%}
+      {%- endfor -%}
+      {{ semaphore_svc_host }}
+
+- name: Set list remove semaphore services
+  ansible.builtin.set_fact:
+    semaphore_svc_remove: >- # noqa: jinja[spacing] jinja[spacing]
+      {%- set semaphore_svc_remove = semaphore_svc_host -%}
+      {%- set nginx = semaphore_proxy_is_nginx_or_not_is_haproxy -%}
+      {%- if nginx and 'nginx' in semaphore_svc_remove -%}
+      {%-   set _ = semaphore_svc_remove.remove('nginx') -%}
+      {%- endif -%}
+      {%- if not nginx and 'haproxy' in semaphore_svc_remove -%}
+      {%-   set _ = semaphore_svc_remove.remove('haproxy') -%}
+      {%- endif -%}
+      {%- if not semaphore_is_docker -%}
+      {%-   for i in semaphore_list -%}
+      {%-     if i.svc in semaphore_svc_remove -%}
+      {%-       set _ = semaphore_svc_remove.remove(i.svc) -%}
+      {%-     endif -%}
+      {%-   endfor -%}
+      {%- endif -%}
+      {{ semaphore_svc_remove }}
+  when: semaphore_svc_host|length>0
+
+- name: Get containers in docker
+  ansible.builtin.command: docker ps -a --format "{{ '{{' }} .Names {{ '}}' }}"
+  register: docker_facts
+  failed_when: "docker_facts.rc != 0 and  'No such file or directory' not in docker_facts.msg"
+  changed_when: "'no changes' in docker_facts.stdout"
+
+- name: Set list current containers semaphore # noqa: no-handler
+  ansible.builtin.set_fact:
+    semaphore_docker_host: "{{ docker_facts.stdout_lines | list }}"
+
+- name: Set list remove containers semaphore
+  ansible.builtin.set_fact:
+    semaphore_docker_remove: >- # noqa: jinja[spacing] jinja[spacing]
+      {%- set _svc_list = [] -%}
+      {%- for i in semaphore_list -%}
+      {%-   set _ = _svc_list.append(i.svc) -%}
+      {%- endfor -%}
+      {%- for i in semaphore_docker_host -%}
+      {%-   if 'semaphore_server' in i  and i not in _svc_list -%}
+      {%-     set _ = semaphore_docker_remove.append(i) -%}
+      {%-   endif -%}
+      {%- endfor -%}
+      {{ semaphore_docker_remove }}
+  when: semaphore_docker_host|length>0
+
+- name: Print find services  for remove
+  ansible.builtin.debug:
+    var: semaphore_svc_remove
+  when: semaphore_svc_remove|length>0
+
+- name: Print find containers for remove
+  ansible.builtin.debug:
+    var: semaphore_docker_remove
+  when: semaphore_docker_remove|length>0

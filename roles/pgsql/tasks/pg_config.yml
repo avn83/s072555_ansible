@@ -1,0 +1,52 @@
+---
+# tasks file for pgsql
+- name: PostgreSQL config users
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    login_host: localhost
+    login_password: "{{ pgsql_postgres_pass }}"
+    login_user: postgres
+    login_unix_socket: "/var/run/postgresql"
+    port: 5432
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: postgres
+  with_items: "{{ pgsql_users }}"
+
+- name: PostgreSQL config databases
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
+    encoding: "UTF-8"
+    template: "template0"
+    login_host: localhost
+    login_password: "{{ pgsql_postgres_pass }}"
+    login_user: postgres
+    login_unix_socket: "/var/run/postgresql"
+    port: 5432
+    owner: "{{ item.owner }}"
+    state: present
+  become: true
+  become_user: postgres
+  with_items: "{{ pgsql_databases }}"
+
+- name: Configure postgresql.conf
+  ansible.builtin.lineinfile:
+    dest: "{{ pgsql_data_path }}/postgresql.conf"
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: present
+    mode: "0644"
+  notify: Restart PG
+  with_items: "{{ pgsql_global_config_options }}"
+
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: "pg_hba.conf.j2"
+    dest: "{{ pgsql_data_path }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: Restart PG
